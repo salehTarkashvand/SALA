@@ -30,14 +30,55 @@ for d in [RAW_DIR, PROCESSED_DIR, EXTERNAL_DIR,
     d.mkdir(parents=True, exist_ok=True)
 
 # ─────────────────────────────────────────────
-# Target assets
+# Target assets (grouped by category)
 # ─────────────────────────────────────────────
 TICKERS = {
-    "BTC-USD":  "Bitcoin",
-    "ETH-USD":  "Ethereum",
-    "GC=F":     "Gold Futures",
-    "AAPL":     "Apple Stock",
-    "^GSPC":    "S&P 500",
+    # ── Cryptocurrencies ──
+    "BTC-USD":   "Bitcoin",
+    "ETH-USD":   "Ethereum",
+    "BNB-USD":   "BNB",
+    "SOL-USD":   "Solana",
+    "XRP-USD":   "XRP",
+    "ADA-USD":   "Cardano",
+    "DOGE-USD":  "Dogecoin",
+    "TRX-USD":   "TRON",
+    "DOT-USD":   "Polkadot",
+    "POL28321-USD": "Polygon (prev. MATIC)",
+    "AVAX-USD":  "Avalanche",
+    "LINK-USD":  "Chainlink",
+    "USDT-USD":  "Tether",
+
+    # ── Forex & Dollar Index ──
+    "DX-Y.NYB":  "U.S. Dollar Index",
+    "EURUSD=X":  "EUR/USD",
+    "JPY=X":     "USD/JPY",
+    "GBPUSD=X":  "GBP/USD",
+    "CAD=X":     "USD/CAD",
+    "AUDUSD=X":  "AUD/USD",
+    "CHF=X":     "USD/CHF",
+    "CNY=X":     "USD/CNY",
+
+    # ── Commodities ──
+    "GC=F":      "Gold Futures",
+    "SI=F":      "Silver Futures",
+    "CL=F":      "WTI Crude Oil",
+    "BZ=F":      "Brent Crude Oil",
+    "NG=F":      "Natural Gas",
+    "HG=F":      "Copper Futures",
+    "PL=F":      "Platinum Futures",
+    "ZC=F":      "Corn Futures",
+
+    # ── Global Stock Indices ──
+    "^GSPC":     "S&P 500",
+    "^IXIC":     "NASDAQ Composite",
+    "^DJI":      "Dow Jones",
+    "^GDAXI":    "DAX",
+    "^FTSE":     "FTSE 100",
+    "^N225":     "Nikkei 225",
+    "^HSI":      "Hang Seng",
+    "^STOXX50E": "Euro Stoxx 50",
+    "^GSPTSE":   "S&P/TSX Composite",
+    "^BVSP":     "IBOVESPA",
 }
 
 # ─────────────────────────────────────────────
