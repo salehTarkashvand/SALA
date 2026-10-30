@@ -3,12 +3,13 @@ SALA Project - Anomaly Detector
 ================================
 Detects abnormal market days using rolling Z-score on daily returns.
 
-The core idea (from Learning Automata theory, Section 2):
-- An "abnormal" day is one where the return is far from the recent norm.
-- We use a rolling window (default 20 days) to estimate the local mean/std.
-- |Z-score| > threshold  ->  abnormal.
+Method:
+- Daily return: r_t = (P_t - P_{t-1}) / P_{t-1}
+- Rolling mean and std over the last `window` days
+- Z-score: z_t = (r_t - mean) / std
+- Label 1 (abnormal) if |z_t| > threshold, else 0 (normal)
 
-Inputs : data/raw/{ticker}.csv  (Date, Open, High, Low, Close, Volume)
+Inputs : data/raw/{ticker}.csv
 Outputs: data/processed/{ticker}.csv  (+ Return, Z_Score, Is_Anomaly)
 """
 
@@ -27,9 +28,6 @@ from src.config import (
 from src.data.loader import _safe_filename
 
 
-# ----------------------------------------------------------------------
-# Core calculations
-# ----------------------------------------------------------------------
 def add_anomaly_columns(
     df: pd.DataFrame,
     window: int = ANOMALY_WINDOW,
@@ -37,48 +35,43 @@ def add_anomaly_columns(
 ) -> pd.DataFrame:
     """
     Add Return, Rolling_Mean, Rolling_Std, Z_Score, Is_Anomaly to a
-    price DataFrame. Modifies a copy, not the original.
+    price DataFrame. Returns a copy.
     """
     out = df.copy()
     close = out["Close"].astype(float)
 
-    # Daily return: r_t = (P_t - P_{t-1}) / P_{t-1}
+    # Daily return
     out["Return"] = close.pct_change(fill_method=None)
 
-    # Rolling statistics over the last `window` days
+    # Rolling statistics
     roll = out["Return"].rolling(window=window, min_periods=window)
     out["Rolling_Mean"] = roll.mean()
     out["Rolling_Std"] = roll.std()
 
-    # Z-score: how many std-devs is today's return from the local mean?
-    # eps avoids division-by-zero on perfectly flat windows (rare).
+    # Z-score (epsilon avoids division by zero)
     eps = 1e-12
     out["Z_Score"] = (out["Return"] - out["Rolling_Mean"]) / (out["Rolling_Std"] + eps)
 
-    # Label: 1 if |Z| > threshold, else 0. NaN (warm-up) becomes 0.
+    # Label
     out["Is_Anomaly"] = (out["Z_Score"].abs() > threshold).astype(int)
     out.loc[out["Z_Score"].isna(), "Is_Anomaly"] = 0
 
     return out
 
 
-# ----------------------------------------------------------------------
-# Single asset
-# ----------------------------------------------------------------------
 def process_asset(ticker: str) -> pd.DataFrame | None:
     """
     Load raw CSV for one ticker, add anomaly columns, save to processed/.
-    Returns the processed DataFrame, or None if raw file is missing.
     """
     safe = _safe_filename(ticker)
     raw_path = RAW_DIR / f"{safe}.csv"
     if not raw_path.exists():
-        print(f"  [{ticker}] raw file missing: {raw_path.name}")
+        print(f"  [{ticker}] raw file missing")
         return None
 
     df = pd.read_csv(raw_path, index_col="Date", parse_dates=True)
     if "Close" not in df.columns:
-        print(f"  [{ticker}] no 'Close' column, skipping")
+        print(f"  [{ticker}] no 'Close' column")
         return None
 
     df = add_anomaly_columns(df)
@@ -92,13 +85,9 @@ def process_asset(ticker: str) -> pd.DataFrame | None:
     return df
 
 
-# ----------------------------------------------------------------------
-# All assets
-# ----------------------------------------------------------------------
 def process_all_assets() -> dict[str, pd.DataFrame]:
     """
     Process every ticker in src.config.TICKERS.
-    Returns {ticker: processed DataFrame}.
     """
     print(f"Processing {len(TICKERS)} assets "
           f"(window={ANOMALY_WINDOW}, threshold={ANOMALY_Z_THRESH})")
@@ -115,12 +104,9 @@ def process_all_assets() -> dict[str, pd.DataFrame]:
     return results
 
 
-# ----------------------------------------------------------------------
-# Summary
-# ----------------------------------------------------------------------
 def build_summary(results: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
-    Build a summary table across all assets.
+    Summary table across all assets.
     """
     rows = []
     for ticker, df in results.items():
@@ -140,18 +126,15 @@ def build_summary(results: dict[str, pd.DataFrame]) -> pd.DataFrame:
 
 
 def save_summary(summary: pd.DataFrame) -> None:
-    """Save summary table to results/tables/anomaly_summary.csv."""
+    """Save summary to results/tables/anomaly_summary.csv."""
     TABLES_DIR.mkdir(parents=True, exist_ok=True)
     path = TABLES_DIR / "anomaly_summary.csv"
     summary.to_csv(path, index=False)
     print(f"Saved: {path.name}")
 
 
-# ----------------------------------------------------------------------
-# Loader for later stages
-# ----------------------------------------------------------------------
 def load_processed(ticker: str) -> pd.DataFrame:
-    """Load the processed CSV (with Return, Z_Score, Is_Anomaly)."""
+    """Load processed CSV for later stages."""
     safe = _safe_filename(ticker)
     path = PROCESSED_DIR / f"{safe}.csv"
     return pd.read_csv(path, index_col="Date", parse_dates=True)
