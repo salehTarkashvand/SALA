@@ -1,0 +1,21 @@
+{
+  "version": "v1_baseline",
+  "date_created": "2026-11-07",
+  "author": "Saleh Tarkashvand",
+  "description": "Initial prototype with VADER sentiment and Z-score anomaly",
+  "models": {
+    "anomaly": {"type": "z_score", "window": 20, "threshold": 2.5},
+    "sentiment": {"type": "vader", "accuracy": 0.481}
+  },
+  "automaton": {
+    "type": "associative_l_r_i",
+    "actions": ["A1_sentiment", "A2_anomaly"],
+    "learning_rate": 0.05
+  },
+  "results": {
+    "reward_rate_btc": 0.487,
+    "baseline_sentiment": 0.499,
+    "baseline_anomaly": 0.501
+  },
+  "notes": "All sanity checks passed. Sentiment is synthetic."
+}

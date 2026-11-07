@@ -1,0 +1,31 @@
+version: "v1_baseline"
+description: "Initial prototype with VADER sentiment and Z-score anomaly"
+date_created: "2026-11-07"
+author: "Saleh Tarkashvand"
+
+data:
+  assets: ["BTC-USD"]
+  start_date: "2022-01-01"
+  end_date: "2025-12-31"
+
+models:
+  anomaly:
+    type: "z_score"
+    window: 20
+    threshold: 2.5
+  sentiment:
+    type: "vader"
+    calibration_dataset: "zeroshot/twitter-financial-news-sentiment"
+
+automaton:
+  type: "associative_l_r_i"
+  actions: ["A1_sentiment", "A2_anomaly"]
+  learning_rate: 0.05
+  init_prob: 0.5
+
+evaluation:
+  metrics: ["reward_rate", "sharpe_ratio", "max_drawdown", "win_rate"]
+  split:
+    train: "2022-01-01 to 2023-12-31"
+    validation: "2024-01-01 to 2024-12-31"
+    test: "2025-01-01 to 2025-12-31"
